@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DUINO32 — AI Microcontroller Code Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --c:#00f5ff;--p:#a855f7;--g:#10b981;--y:#f59e0b;--r:#ef4444;
+  --bg:#040810;--bg2:rgba(6,14,30,.78);--bg3:rgba(6,14,30,.55);
+  --border:rgba(0,245,255,.1);--text:#e2e8f0;--muted:#475569;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'JetBrains Mono','Fira Code',monospace;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#00f5ff33;border-radius:3px}
+
+/* TYPOGRAPHY */
+.neon{color:var(--c);text-shadow:0 0 12px var(--c),0 0 30px #00f5ff55}
+.neon-p{color:var(--p);text-shadow:0 0 10px var(--p),0 0 26px #a855f755}
+.neon-g{color:var(--g);text-shadow:0 0 8px #10b98166}
+.orb{font-family:'Orbitron',sans-serif}
+
+/* GLASS */
+.glass{background:var(--bg2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:16px}
+.glass-sm{background:var(--bg3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(0,245,255,.08);border-radius:10px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid var(--c);color:var(--c);padding:9px 22px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;transition:all .2s;text-transform:uppercase;text-decoration:none}
+.btn:hover{background:rgba(0,245,255,.1);box-shadow:0 0 18px #00f5ff44,inset 0 0 18px #00f5ff0a}
+.btn-p{border-color:var(--p);color:#c084fc}
+.btn-p:hover{background:rgba(124,58,237,.15);box-shadow:0 0 16px #7c3aed44}
+.btn-sm{padding:6px 14px;font-size:11px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* CHIPS */
+.chip{background:rgba(0,245,255,.04);border:1px solid rgba(0,245,255,.15);border-radius:20px;padding:7px 14px;font-size:12px;cursor:pointer;color:#64748b;transition:all .2s;font-family:'JetBrains Mono',monospace;display:inline-block}
+.chip:hover,.chip.sel{background:rgba(0,245,255,.12);border-color:var(--c);color:var(--c);box-shadow:0 0 10px #00f5ff22}
+
+/* MCU CARD */
+.mcard{background:rgba(6,14,30,.85);border:1px solid rgba(0,245,255,.12);border-radius:12px;padding:18px 14px;cursor:pointer;transition:all .2s;text-align:center}
+.mcard:hover{border-color:var(--c);box-shadow:0 0 20px #00f5ff22;transform:translateY(-2px)}
+.mcard.sel{border-color:var(--p);background:rgba(124,58,237,.1);box-shadow:0 0 18px #7c3aed33}
+
+/* TERMINAL */
+.terminal{background:#020810;border:1px solid rgba(0,245,255,.1);border-radius:12px;overflow:hidden}
+.term-bar{background:rgba(0,245,255,.04);padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,245,255,.07)}
+.tdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.term-code{padding:20px;overflow-x:auto;font-size:12px;line-height:1.88;color:#94a3b8;font-family:'JetBrains Mono',monospace;white-space:pre}
+
+/* WIRING ROW */
+.wrow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;background:rgba(0,245,255,.02);border:1px solid rgba(0,245,255,.06);margin-bottom:6px;font-size:12px}
+.wdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* TABS */
+.tabbar{border-bottom:1px solid rgba(0,245,255,.07);display:flex;gap:0;margin-bottom:20px}
+.tabbt{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:10px 16px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+.tabbt.on{color:var(--c);border-bottom-color:var(--c)}
+.tabbt:hover{color:#94a3b8}
+
+/* BADGES */
+.bdg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.bdg-g{background:rgba(16,185,129,.1);color:var(--g);border:1px solid rgba(16,185,129,.28)}
+.bdg-y{background:rgba(245,158,11,.1);color:var(--y);border:1px solid rgba(245,158,11,.28)}
+.bdg-b{background:rgba(0,245,255,.07);color:var(--c);border:1px solid rgba(0,245,255,.2)}
+.bdg-r{background:rgba(239,68,68,.1);color:var(--r);border:1px solid rgba(239,68,68,.3)}
+
+/* CONFLICT */
+.conflict-box{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.22);border-radius:10px;padding:12px 16px;margin-bottom:8px}
+
+/* LIB CARD */
+.libcard{background:rgba(0,245,255,.04);border:1px solid rgba(0,245,255,.1);border-radius:8px;padding:12px 16px;margin-bottom:8px}
+.lib-install{background:rgba(0,245,255,.03);border:1px solid rgba(0,245,255,.08);border-radius:6px;padding:8px 12px;font-size:11px;color:#64748b;margin-top:10px}
+
+/* COST */
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-radius:6px;font-size:12px;margin-bottom:4px;transition:background .15s}
+.cost-row:hover{background:rgba(0,245,255,.03)}
+
+/* PROJECT NAME BADGE */
+.pname-badge{background:linear-gradient(135deg,rgba(0,245,255,.07),rgba(124,58,237,.07));border:1px solid rgba(0,245,255,.18);border-radius:10px;padding:12px 20px;display:inline-block;margin-bottom:20px}
+
+/* ANIMATIONS */
+.scan{position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c),transparent);animation:scanMove 5s linear infinite;pointer-events:none;z-index:1;opacity:.22}
+@keyframes scanMove{0%{transform:translateY(0)}100%{transform:translateY(100vh)}}
+
+.watermark{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none;animation:wmFade 1.2s ease 2.4s forwards}
+@keyframes wmFade{to{opacity:0}}
+.wm-text{font-family:'Orbitron',sans-serif;font-size:clamp(22px,5vw,58px);font-weight:900;color:rgba(0,245,255,.07);letter-spacing:.1em;line-height:1.25;text-align:center;text-transform:uppercase;user-select:none;animation:glitch .12s infinite}
+@keyframes glitch{0%,100%{transform:translate(0)}20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,2px)}80%{transform:translate(2px,-2px)}}
+.wm-stop{animation:none}
+
+.slide-in{animation:slideIn .38s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.pulse-ring{animation:pulseRing 2.5s ease-in-out infinite}
+@keyframes pulseRing{0%,100%{box-shadow:0 0 0 0 rgba(0,245,255,.22)}50%{box-shadow:0 0 0 10px rgba(0,245,255,0)}}
+
+.float-anim{animation:floatUp linear infinite}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.caret-blink::after{content:"▋";animation:caretBlink 1s step-end infinite;color:var(--c)}
+@keyframes caretBlink{50%{opacity:0}}
+
+/* STEP SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* GRID */
+.mcu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:9px}
+
+/* HEADER */
+header{position:relative;z-index:10;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,245,255,.06)}
+.logo-box{width:34px;height:34px;border:2px solid var(--c);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px #00f5ff55;flex-shrink:0}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:20px;color:var(--c);text-shadow:0 0 20px var(--c),0 0 50px #00f5ff44;letter-spacing:.18em}
+.logo-sub{color:#1e293b;font-size:10px;letter-spacing:.35em;padding-left:10px;border-left:1px solid #1e293b}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)}
+.header-right{display:flex;gap:6px;align-items:center}
+.status-label{color:#334155;font-size:10px;letter-spacing:.12em}
+
+/* MAIN */
+main{position:relative;z-index:10;max-width:900px;margin:0 auto;padding:44px 22px 80px}
+
+/* HERO */
+.hero-eyebrow{font-family:'Orbitron',sans-serif;font-size:11px;color:#334155;letter-spacing:.45em;text-transform:uppercase;margin-bottom:14px;text-align:center}
+.hero-h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(26px,5vw,50px);line-height:1.12;margin-bottom:14px;text-align:center}
+.hero-p{color:#334155;font-size:13px;max-width:460px;margin:0 auto 44px;line-height:1.9;text-align:center}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:28px}
+.search-inner{display:flex;align-items:center;gap:10px;padding:12px 18px}
+.search-arrow{color:var(--c);font-size:16px;font-weight:700;flex-shrink:0}
+#queryInput{flex:1;background:none;border:none;color:var(--text);font-size:14px;font-family:'JetBrains Mono',monospace;caret-color:var(--c)}
+#queryInput:focus{outline:none}
+#queryInput::placeholder{color:#334155}
+
+/* STEP LABELS */
+.step-label{color:#334155;font-size:10px;letter-spacing:.3em;margin-bottom:6px}
+
+/* DETECTING */
+.detect-center{text-align:center;padding:80px 0}
+.detect-box{display:inline-block;padding:32px 52px}
+
+/* CONFIRM summary */
+.confirm-summary{background:rgba(124,58,237,.05);border:1px solid rgba(168,85,247,.14);border-radius:12px;padding:18px;margin-bottom:20px}
+.summary-row{margin-bottom:10px;font-size:13px}
+.summary-row:last-child{margin-bottom:0}
+.summary-key{color:var(--muted);font-size:10px;letter-spacing:.2em}
+
+/* RESULT header */
+.result-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.result-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+
+/* GENERATING */
+.gen-step{font-size:12px;margin-bottom:8px;text-align:left}
+
+/* FOOTER */
+footer{position:relative;z-index:10;text-align:center;padding:18px;border-top:1px solid rgba(0,245,255,.04);color:#1e293b;font-size:10px;letter-spacing:.2em}
+
+/* CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;pointer-events:none;z-index:0}
+
+/* SMART HINT */
+.smart-hint{padding:14px 20px;margin-bottom:16px;border-color:rgba(168,85,247,.22) !important}
+.smart-hint-label{color:var(--p);font-size:10px;letter-spacing:.3em;margin-bottom:8px}
+.smart-hint-body{color:#64748b;font-size:12px}
+.smart-hint-item{color:var(--c);margin-right:8px}
+
+/* DETECTED BAR */
+.detected-bar{padding:12px 18px}
+.detected-label{color:#334155;font-size:11px}
+.detected-val{color:var(--c);font-size:11px}
+
+/* CODE SYNTAX */
+.kw{color:#7c3aed}
+.kw2{color:#ec4899}
+.fn{color:#06b6d4}
+.pp{color:#00f5ff}
+.num{color:#f59e0b}
+.str{color:#10b981}
+.cm{color:#374151;font-style:italic}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  header{padding:14px 16px;flex-wrap:wrap;gap:8px}
+  .header-right .status-label{display:none}
+  main{padding:28px 14px 60px}
+  .mcu-grid{grid-template-columns:repeat(2,1fr)}
+  .tabbt{padding:8px 10px;font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<canvas id="bg-canvas"></canvas>
+<div class="scan"></div>
+
+<!-- WATERMARK -->
+<div class="watermark" id="watermark">
+  <div class="wm-text" id="wmText">Future of<br>Microcontroller<br>Coding</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-box"><span style="color:var(--c);font-size:16px">⬡</span></div>
+    <span class="logo-name">DUINO32</span>
+    <span class="logo-sub">AI CODE GEN v2</span>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span class="status-label">ONLINE · 20+ SENSORS · PIN CONFLICT · COST ESTIMATE</span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ── SCREEN: IDLE ── -->
+  <div class="screen active" id="s-idle">
+    <div class="slide-in">
+      <div class="hero-eyebrow">◈ Neural Hardware Compiler ◈</div>
+      <h1 class="hero-h1">
+        <span style="color:var(--text)">Describe Your</span><br>
+        <span class="neon">Hardware Project.</span>
+      </h1>
+      <p class="hero-p">Plain English → smart sensor detection → pin conflict check → component cost → working embedded code</p>
+
+      <div class="search-wrap">
+        <div class="glass pulse-ring" style="border-radius:14px;padding:3px">
+          <div class="search-inner">
+            <span class="search-arrow">⟩</span>
+            <input id="queryInput" class="caret-blink" placeholder="describe your project in plain English…" autocomplete="off" spellcheck="false"/>
+            <button class="btn btn-sm" onclick="startQuery()">COMPILE →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chip-wrap" style="justify-content:center" id="suggChips"></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: DETECTING ── -->
+  <div class="screen" id="s-detecting">
+    <div class="detect-center">
+      <div class="glass-sm detect-box">
+        <div class="orb neon" style="font-size:12px;letter-spacing:.35em;margin-bottom:14px">ANALYZING</div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:22px" id="detect-query-label">"..."</div>
+        <div style="color:var(--dim);font-size:13px"><span class="neon">▶</span> detecting sensors<span id="dots1"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: MCU ── -->
+  <div class="screen" id="s-mcu">
+    <div class="slide-in">
+      <div class="glass-sm smart-hint" id="smart-hint-box" style="display:none">
+        <div class="smart-hint-label">◈ SMART SENSOR SUGGESTION</div>
+        <div class="smart-hint-body" id="smart-hint-body"></div>
+      </div>
+      <div class="glass" style="padding:28px;margin-bottom:16px">
+        <div class="step-label">STEP 01 / 03</div>
+        <h2 class="orb" style="color:var(--text);font-size:17px;margin-bottom:22px">Select <span class="neon">Microcontroller</span></h2>
+        <div class="mcu-grid" id="mcu-grid"></div>
+      </div>
+      <div class="glass-sm detected-bar">
+        <span class="detected-label">DETECTED: </span>
+        <span class="detected-val" id="detected-bar-text"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: COMPONENTS ── -->
+  <div class="screen" id="s-components">
+    <div class="slide-in">
+      <div class="glass" style="padding:28px;margin-bottom:16px">
+        <div class="step-label">STEP 02 / 03</div>
+        <h2 class="orb" style="color:var(--text);font-size:17px;margin-bottom:22px">Select <span class="neon">Available Components</span></h2>
+        <div class="chip-wrap" id="comp-chips" style="margin-bottom:26px"></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn" onclick="goToConfirm()">Continue →</button>
+          <button class="btn btn-p" onclick="showScreen('s-mcu')">← Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: CONFIRM ── -->
+  <div class="screen" id="s-confirm">
+    <div class="slide-in">
+      <div class="glass" style="padding:28px;margin-bottom:16px;border-color:rgba(168,85,247,0.2)">
+        <div class="step-label" style="color:var(--p)">STEP 03 / 03 · CONFIRM</div>
+        <h2 class="orb" style="color:var(--text);font-size:17px;margin-bottom:20px">Review <span class="neon-p">Build Config</span></h2>
+
+        <div class="pname-badge">
+          <span style="color:var(--dim);font-size:10px;letter-spacing:.25em">AI PROJECT NAME  </span>
+          <span class="orb neon" style="font-size:14px;font-weight:700;letter-spacing:.08em" id="conf-proj-name">—</span>
+        </div>
+
+        <div class="confirm-summary">
+          <div class="summary-row"><span class="summary-key">PROJECT: </span><span id="conf-query"></span></div>
+          <div class="summary-row"><span class="summary-key">BOARD: </span><span class="neon" id="conf-board"></span></div>
+          <div class="summary-row" style="margin-bottom:0"><span class="summary-key">COMPONENTS: </span><span style="color:var(--p)" id="conf-comps"></span></div>
+        </div>
+
+        <!-- Conflicts -->
+        <div id="conflict-section" style="display:none;margin-bottom:20px">
+          <div style="color:var(--r);font-size:10px;letter-spacing:.3em;margin-bottom:10px">⚠ PIN CONFLICTS DETECTED</div>
+          <div id="conflict-list"></div>
+        </div>
+
+        <!-- Cost -->
+        <div style="margin-bottom:20px">
+          <div style="color:var(--y);font-size:10px;letter-spacing:.3em;margin-bottom:10px">◎ ESTIMATED BUILD COST</div>
+          <div class="glass-sm" style="padding:12px 4px">
+            <div id="cost-list"></div>
+            <div style="border-top:1px solid rgba(0,245,255,0.07);margin:8px 12px 4px;padding-top:8px;display:flex;justify-content:space-between">
+              <span style="color:var(--text);font-size:13px;font-weight:700">TOTAL</span>
+              <span style="color:var(--g);font-size:15px;font-weight:700" id="cost-total">≈ $0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button class="btn" onclick="compile()">⚡ Generate Code</button>
+          <button class="btn btn-p" onclick="showScreen('s-components')">← Modify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: GENERATING ── -->
+  <div class="screen" id="s-generating">
+    <div class="detect-center">
+      <div class="glass-sm detect-box">
+        <div class="orb neon-p" style="font-size:12px;letter-spacing:.35em;margin-bottom:20px">COMPILING</div>
+        <div id="gen-steps"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: RESULT ── -->
+  <div class="screen" id="s-result">
+    <div class="slide-in">
+      <div class="result-header">
+        <div>
+          <div class="orb neon" style="font-size:15px;letter-spacing:.1em;margin-bottom:6px" id="res-proj-name">—</div>
+          <div class="result-badges" id="res-badges"></div>
+        </div>
+        <button class="btn btn-sm" onclick="reset()">⟳ New Project</button>
+      </div>
+
+      <div class="tabbar">
+        <button class="tabbt on" onclick="switchTab('code',this)">◈ Code</button>
+        <button class="tabbt" onclick="switchTab('wiring',this)">⟁ Wiring</button>
+        <button class="tabbt" onclick="switchTab('libs',this)">⬡ Libraries</button>
+        <button class="tabbt" onclick="switchTab('cost',this)">◎ Cost</button>
+      </div>
+
+      <!-- CODE TAB -->
+      <div id="tab-code">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
+          <button class="btn btn-sm" id="copy-btn" onclick="copyCode()">COPY</button>
+          <button class="btn btn-p btn-sm" onclick="downloadCode()">↓ .INO</button>
+        </div>
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="tdot" style="background:#ef4444"></div>
+            <div class="tdot" style="background:#f59e0b"></div>
+            <div class="tdot" style="background:#10b981"></div>
+            <span style="color:#1e293b;font-size:11px;margin-left:8px" id="term-filename">project.ino</span>
+          </div>
+          <div class="term-code" id="code-output"></div>
+        </div>
+        <div class="glass-sm" style="padding:20px;margin-top:16px">
+          <div style="color:var(--p);font-size:10px;letter-spacing:.3em;margin-bottom:10px">◈ HOW IT WORKS</div>
+          <p style="color:#64748b;font-size:12px;line-height:1.95" id="explanation-output"></p>
+        </div>
+      </div>
+
+      <!-- WIRING TAB -->
+      <div id="tab-wiring" style="display:none">
+        <div style="color:var(--dim);font-size:11px;margin-bottom:16px">
+          Connect to <span id="wiring-board" class="neon">board</span>:
+        </div>
+        <div id="wiring-list"></div>
+        <div id="wiring-conflicts" style="display:none;margin-top:16px">
+          <div style="color:var(--r);font-size:10px;letter-spacing:.3em;margin-bottom:10px">⚠ PIN CONFLICTS</div>
+          <div id="wiring-conflict-list"></div>
+        </div>
+      </div>
+
+      <!-- LIBS TAB -->
+      <div id="tab-libs" style="display:none">
+        <div id="libs-list"></div>
+      </div>
+
+      <!-- COST TAB -->
+      <div id="tab-cost" style="display:none">
+        <div class="glass-sm" style="padding:16px">
+          <div style="color:var(--y);font-size:10px;letter-spacing:.3em;margin-bottom:14px">ESTIMATED BUILD COST</div>
+          <div id="res-cost-list"></div>
+          <div style="border-top:1px solid rgba(0,245,255,0.07);margin:12px 12px 4px;padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <span class="orb" style="color:var(--text);font-size:14px;font-weight:700">TOTAL</span>
+            <span class="orb" style="color:var(--g);font-size:18px;font-weight:700" id="res-cost-total">≈ $0.00</span>
+          </div>
+        </div>
+        <div class="glass-sm" style="padding:14px;margin-top:12px">
+          <div style="color:var(--dim);font-size:11px;line-height:1.8">Prices are approximate USD retail. AliExpress or bulk orders can cut costs 50–70%. Resistors, LEDs, and jumper wires are typically sold in packs of 10–100.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>DUINO32 v2 · AI MICROCONTROLLER ASSISTANT · ARDUINO · ESP32 · ESP8266</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const PRICES={
+  "Arduino Uno":8,"Arduino Nano":5,"Arduino Mega":18,"ESP32":6,"ESP8266":4,
+  "DHT11":1.5,"DHT22":3.5,"LM35":1.2,"DS18B20":2.5,"BME280":4,
+  "PIR HC-SR501":2,"RCWL-0516 Radar":3,"Vibration SW-420":1,
+  "HC-SR04 Ultrasonic":2,"VL53L0X ToF":5,"Sharp IR GP2Y0A21":4,
+  "LDR Photoresistor":0.5,"BH1750 Lux Sensor":3,
+  "MQ-2 Gas Sensor":3,"MQ-135 Air Quality":3,"MQ-7 CO Sensor":3.5,
+  "Capacitive Soil Sensor":2,"Resistive Soil Sensor":1,"YL-69":1,
+  "BMP280 Barometric":3,"FSR 402 Force Sensor":4,"HX711 Load Cell":3,
+  "Single LED":0.1,"RGB LED":0.3,"WS2812B NeoPixel Strip":6,
+  "16x2 LCD I2C":4,"OLED SSD1306 128x64":5,"TM1637 7-Segment":2,
+  "HC-05 Bluetooth":4,"NRF24L01 Radio":2,"SIM800L GSM":8,
+  "Servo Motor":4,"Relay Module":1.5,"Water Pump":5,
+  "Buzzer":0.5,"Push Button":0.2,"Potentiometer":0.5,
+  "Rain Sensor":2,"Reed Switch":1,"Water Level Sensor":2,
+  "IR Sensor":1.5,"Sound Sensor":2,"Breadboard":2,"Jumper Wires":1.5,
+};
+
+const LIBRARIES={
+  "DHT11":{name:"DHT sensor library",author:"Adafruit",search:"DHT sensor library"},
+  "DHT22":{name:"DHT sensor library",author:"Adafruit",search:"DHT sensor library"},
+  "DS18B20":{name:"DallasTemperature",author:"Miles Burton",search:"DallasTemperature"},
+  "BME280":{name:"Adafruit BME280",author:"Adafruit",search:"Adafruit BME280"},
+  "Servo Motor":{name:"Servo.h",author:"Built-in Arduino",search:null},
+  "OLED SSD1306 128x64":{name:"Adafruit SSD1306",author:"Adafruit",search:"Adafruit SSD1306"},
+  "16x2 LCD I2C":{name:"LiquidCrystal_I2C",author:"Frank de Brabander",search:"LiquidCrystal I2C"},
+  "WS2812B NeoPixel Strip":{name:"Adafruit NeoPixel",author:"Adafruit",search:"Adafruit NeoPixel"},
+  "BH1750 Lux Sensor":{name:"BH1750",author:"Christopher Laws",search:"BH1750"},
+  "HX711 Load Cell":{name:"HX711",author:"bogde",search:"HX711"},
+  "VL53L0X ToF":{name:"VL53L0X",author:"Pololu",search:"VL53L0X"},
+};
+
+const DEFAULT_PINS={
+  "DHT11":[{l:"DATA",p:2}],"DHT22":[{l:"DATA",p:2}],
+  "LM35":[{l:"OUT",p:"A0",a:true}],
+  "PIR HC-SR501":[{l:"OUT",p:2}],
+  "HC-SR04 Ultrasonic":[{l:"TRIG",p:9},{l:"ECHO",p:10}],
+  "LDR Photoresistor":[{l:"OUT",p:"A0",a:true}],
+  "MQ-2 Gas Sensor":[{l:"AOUT",p:"A0",a:true}],
+  "MQ-135 Air Quality":[{l:"AOUT",p:"A0",a:true}],
+  "Capacitive Soil Sensor":[{l:"AOUT",p:"A0",a:true}],
+  "Servo Motor":[{l:"SIG",p:9}],
+  "HC-05 Bluetooth":[{l:"TX",p:0},{l:"RX",p:1}],
+  "Buzzer":[{l:"+",p:8}],"Single LED":[{l:"+",p:13}],
+  "Push Button":[{l:"OUT",p:2}],
+  "Potentiometer":[{l:"WIPER",p:"A0",a:true}],
+  "Relay Module":[{l:"IN",p:7}],
+  "Rain Sensor":[{l:"AOUT",p:"A0",a:true}],
+  "Reed Switch":[{l:"OUT",p:2}],
+  "Water Level Sensor":[{l:"SIG",p:"A0",a:true}],
+  "IR Sensor":[{l:"OUT",p:2}],
+  "Sound Sensor":[{l:"DO",p:2}],
+};
+
+const SUGGESTIONS_LIST=[
+  "Make LED blink on Arduino","Measure temperature with ESP32",
+  "Detect motion and sound alarm","Control servo with potentiometer",
+  "Auto water plant when soil is dry","Measure distance ultrasonically",
+  "Gas leak alarm system","Turn on light when room is dark",
+  "Count button presses","Turn on light when it rains",
+  "Control LED with Bluetooth","Turn fan on when temperature rises",
+];
+
+const SMART_MAP={
+  "enter a room|detect person|someone walks|presence|intruder|occupancy":["PIR HC-SR501","HC-SR04 Ultrasonic","IR Sensor","RCWL-0516 Radar"],
+  "temperature|heat|cold|warm|degrees|celsius|fahrenheit":["DHT22","LM35","DS18B20","BME280"],
+  "distance|how far|measure range|obstacle|parking|closer":["HC-SR04 Ultrasonic","VL53L0X ToF","Sharp IR GP2Y0A21"],
+  "dark|light level|brightness|night|daytime|automatic light":["LDR Photoresistor","BH1750 Lux Sensor"],
+  "gas|smoke|air quality|co2|leak|fume|hazard":["MQ-2 Gas Sensor","MQ-135 Air Quality","MQ-7 CO Sensor"],
+  "soil|plant|dry|irrigat|moisture|water plant":["Capacitive Soil Sensor","Resistive Soil Sensor","YL-69"],
+  "pressure|force|weight|foot|step|load":["FSR 402 Force Sensor","BMP280 Barometric","HX711 Load Cell"],
+  "water level|tank full|flood|overflow":["Water Level Sensor"],
+  "rain|raining|wet|rainfall":["Rain Sensor"],
+  "phone|bluetooth|wireless|remote control":["HC-05 Bluetooth"],
+  "rotate|servo|motor|angle|door lock|valve|sweep":["Servo Motor"],
+  "display|show|screen|lcd|oled|print values":["16x2 LCD I2C","OLED SSD1306 128x64"],
+  "blink|flash|led light|glow|rgb":["Single LED","RGB LED","WS2812B NeoPixel Strip"],
+  "sound|clap|noise|loud|microphone":["Sound Sensor"],
+  "button|press|count|toggle|switch":["Push Button"],
+  "knob|dim|brightness control|adjust|potentiometer":["Potentiometer"],
+  "fan|pump|relay|power switch|motor control":["Relay Module"],
+};
+
+const KNOWN_SENSORS={
+  temperature:["DHT22","DHT11","LM35","DS18B20","BME280"],
+  motion:["PIR HC-SR501","RCWL-0516 Radar","Vibration SW-420"],
+  distance:["HC-SR04 Ultrasonic","VL53L0X ToF","Sharp IR GP2Y0A21"],
+  light:["LDR Photoresistor","BH1750 Lux Sensor"],
+  gas:["MQ-2 Gas Sensor","MQ-135 Air Quality","MQ-7 CO Sensor"],
+  moisture:["Capacitive Soil Sensor","Resistive Soil Sensor","YL-69"],
+  pressure:["BMP280 Barometric","FSR 402 Force Sensor","HX711 Load Cell"],
+  led:["Single LED","RGB LED","WS2812B NeoPixel Strip"],
+  display:["16x2 LCD I2C","OLED SSD1306 128x64","TM1637 7-Segment"],
+  connectivity:["HC-05 Bluetooth","NRF24L01 Radio"],
+  servo:["Servo Motor"],buzzer:["Buzzer"],button:["Push Button"],
+  pot:["Potentiometer"],relay:["Relay Module"],rain:["Rain Sensor"],
+  water:["Water Level Sensor"],ir:["IR Sensor"],sound:["Sound Sensor"],
+};
+
+const MCUS_DATA=[
+  {id:"arduino_uno",label:"Arduino Uno",sub:"328P · 5V · 14 I/O",esp:false},
+  {id:"arduino_nano",label:"Arduino Nano",sub:"328P · 5V · Compact",esp:false},
+  {id:"esp32",label:"ESP32",sub:"Dual-core · WiFi · BT",esp:true},
+  {id:"esp8266",label:"ESP8266",sub:"WiFi · 3.3V · IoT",esp:true},
+  {id:"arduino_mega",label:"Arduino Mega",sub:"2560 · 54 I/O",esp:false},
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let state={
+  query:"",mcu:null,sensors:[],comps:[],
+  result:null,conflicts:[],costs:[],
+  projName:"",dotsInterval:null,
+};
+
+function validateRequest(query, mcu, components){
+
+  query = query.toLowerCase()
+
+  if(query.includes("wifi") && !mcu.label.includes("ESP")){
+      return "WiFi projects require ESP32 or ESP8266."
+  }
+
+  if(query.includes("bluetooth") && mcu.label === "Arduino Uno"){
+      return "Bluetooth requires HC-05 module or ESP32."
+  }
+
+  if(query.includes("camera") && !mcu.label.includes("ESP32")){
+      return "Camera modules only work well with ESP32."
+  }
+
+  return null
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════════════
+(function(){
+  const c=document.getElementById("bg-canvas");
+  const ctx=c.getContext("2d");
+  let W,H;
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize();window.addEventListener("resize",resize);
+  const pts=Array.from({length:55},()=>({
+    x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
+    vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
+    r:Math.random()*1.4+.4,
+    col:["#00f5ff","#7c3aed","#3b82f6","#06b6d4"][Math.floor(Math.random()*4)],
+  }));
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.col;ctx.shadowBlur=10;ctx.shadowColor=p.col;ctx.fill();
+    });
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<110){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(0,245,255,${.07*(1-d/110)})`;ctx.lineWidth=.4;ctx.stroke();
+      }
+    }));
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════════
+// WATERMARK
+// ═══════════════════════════════════════════════════════
+setTimeout(()=>{
+  const wt=document.getElementById("wmText");
+  if(wt)wt.classList.add("wm-stop");
+},1800);
+setTimeout(()=>{
+  const wm=document.getElementById("watermark");
+  if(wm)wm.style.display="none";
+},3800);
+
+// ═══════════════════════════════════════════════════════
+// SUGGESTIONS
+// ═══════════════════════════════════════════════════════
+(function(){
+  const wrap=document.getElementById("suggChips");
+  SUGGESTIONS_LIST.forEach((s,i)=>{
+    const b=document.createElement("button");
+    b.className="chip float-anim";
+    b.textContent=s;
+    b.style.animationDuration=(3+(i%5)*.6)+"s";
+    b.style.animationDelay=(i*.15)+"s";
+    b.onclick=()=>{document.getElementById("queryInput").value=s;document.getElementById("queryInput").focus();};
+    wrap.appendChild(b);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function startDots(elId){
+  let i=0;
+  clearInterval(state.dotsInterval);
+  state.dotsInterval=setInterval(()=>{i=(i+1)%4;const el=document.getElementById(elId);if(el)el.textContent=".".repeat(i);},380);
+}
+function stopDots(){clearInterval(state.dotsInterval);}
+
+function getSmartSuggestions(q){
+  q=q.toLowerCase();
+  for(const[pattern,sensors]of Object.entries(SMART_MAP)){
+    if(pattern.split("|").some(p=>q.includes(p)))return sensors;
+  }
+  return null;
+}
+
+function detectSensors(q){
+  q=q.toLowerCase();
+  const smart=getSmartSuggestions(q);
+  if(smart)return smart;
+  const d=[];
+  if(q.match(/temp|heat|cold|thermal|degree/))d.push(...KNOWN_SENSORS.temperature.slice(0,3));
+  if(q.match(/motion|pir|move|presence/))d.push(...KNOWN_SENSORS.motion.slice(0,3));
+  if(q.match(/distance|ultrasonic|proximity|range|obstacle/))d.push(...KNOWN_SENSORS.distance.slice(0,3));
+  if(q.match(/light|dark|bright|ldr|lux/))d.push(...KNOWN_SENSORS.light);
+  if(q.match(/gas|smoke|co2|air quality|leak/))d.push(...KNOWN_SENSORS.gas.slice(0,2));
+  if(q.match(/soil|moisture|plant|irrigation/))d.push(...KNOWN_SENSORS.moisture.slice(0,2));
+  if(q.match(/pressure|force|weight|foot/))d.push(...KNOWN_SENSORS.pressure.slice(0,2));
+  if(q.match(/led|blink|flash|glow/))d.push(...KNOWN_SENSORS.led.slice(0,2));
+  if(q.match(/display|screen|lcd|oled/))d.push(...KNOWN_SENSORS.display.slice(0,2));
+  if(q.match(/bluetooth|wireless|phone/))d.push(...KNOWN_SENSORS.connectivity.slice(0,1));
+  if(q.match(/servo|rotate|motor|angle/))d.push(...KNOWN_SENSORS.servo);
+  if(q.match(/buzz|alarm|beep/))d.push(...KNOWN_SENSORS.buzzer);
+  if(q.match(/button|press|switch|count/))d.push(...KNOWN_SENSORS.button);
+  if(q.match(/knob|pot|dim/))d.push(...KNOWN_SENSORS.pot);
+  if(q.match(/relay|fan|pump/))d.push(...KNOWN_SENSORS.relay);
+  if(q.match(/rain|raining/))d.push(...KNOWN_SENSORS.rain);
+  if(q.match(/water level|tank|overflow/))d.push(...KNOWN_SENSORS.water);
+  if(q.match(/ir sensor|infrared/))d.push(...KNOWN_SENSORS.ir);
+  if(q.match(/clap|sound sensor|noise/))d.push(...KNOWN_SENSORS.sound);
+  if(d.length===0)d.push("DHT22","HC-SR04 Ultrasonic","PIR HC-SR501","LDR Photoresistor");
+  return [...new Set(d)];
+}
+
+function detectPinConflicts(components,mcu){
+  const isESP=mcu&&mcu.id.includes("esp");
+  const pinMap={},conflicts=[];
+  const ALT=isESP?[4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33]:[2,3,4,5,6,7,8,9,10,11,12,13];
+  components.forEach(comp=>{
+    (DEFAULT_PINS[comp]||[]).forEach(({l,p,a})=>{
+      if(a)return;
+      const ep=isESP?(p===2?4:p===9?5:p===10?18:p):p;
+      if(pinMap[ep]){
+        const used=Object.keys(pinMap).map(Number);
+        const alt=ALT.find(x=>!used.includes(x)&&x!==ep);
+        conflicts.push({pin:ep,comp1:pinMap[ep],comp2:comp,label:l,suggestedAlt:alt});
+      } else{pinMap[ep]=comp;}
+    });
+  });
+  return conflicts;
+}
+
+function generateProjectName(query,components){
+  const q=query.toLowerCase();
+  const adjs=["Smart","Auto","Nano","Cyber","Eco","Pro","Ultra","Micro","Neuro","Hyper"];
+  const adj=adjs[Math.floor((q.length+components.length)%adjs.length)];
+  if(q.match(/plant|soil|water|irrigat/))return adj+" PlantGuardian";
+  if(q.match(/temp|heat|cold|fan|thermal/))return adj+" ThermoBot";
+  if(q.match(/motion|pir|alarm|security|intruder/))return adj+" SentinelX";
+  if(q.match(/distance|park|obstacle|range/))return adj+" RangeMapper";
+  if(q.match(/door|lock|rfid/))return adj+" AccessCore";
+  if(q.match(/rain|weather/))return adj+" StormSense";
+  if(q.match(/gas|smoke|leak|fume/))return adj+" HazardWatch";
+  if(q.match(/heart|pulse/))return adj+" VitalScan";
+  if(q.match(/bluetooth|wifi|iot|wireless/))return adj+" NetLinker";
+  if(q.match(/led|light|blink/))return adj+" LumaCtrl";
+  if(q.match(/servo|motor|rotate/))return adj+" ServoMaster";
+  if(q.match(/button|press|count/))return adj+" TactilCore";
+  if(q.match(/sound|clap|noise/))return adj+" SoundSwitch";
+  return adj+" MicroSystem";
+}
+
+// ═══════════════════════════════════════════════════════
+// SYNTAX HIGHLIGHT
+// ═══════════════════════════════════════════════════════
+function highlight(code){
+
+  if(!code){
+    code = "// No code generated";
+  }
+
+  return code
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+// ═══════════════════════════════════════════════════════
+// CODE GENERATOR
+// ═══════════════════════════════════════════════════════
+async function generateCode(query, mcuid, components){
+
+  try{
+
+    const response = await fetch("http://127.0.0.1:5000/generate",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        command:query
+      })
+    })
+
+    const data = await response.json()
+
+    const firmware = data.code || "// No code returned"
+
+    return {
+      code: firmware,
+      wiring: [],
+      explanation: "Firmware generated from backend",
+      library: "Arduino",
+      difficulty: "Beginner",
+      buildTime: "1 min"
+    }
+
+  }catch(err){
+
+    console.error(err)
+
+    return {
+      code: "// Backend connection failed",
+      wiring: [],
+      explanation: "Flask backend not reachable",
+      library: "",
+      difficulty: "",
+      buildTime: ""
+    }
+
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// FLOW CONTROL
+// ═══════════════════════════════════════════════════════
+function startQuery(){
+  const q=document.getElementById("queryInput").value.trim();
+  if(!q)return;
+  state.query=q;
+  state.comps=[];
+  state.mcu=null;
+
+  // Detecting screen
+  document.getElementById("detect-query-label").textContent=`"${q}"`;
+  showScreen("s-detecting");
+  startDots("dots1");
+
+  setTimeout(()=>{
+    stopDots();
+    state.sensors=detectSensors(q);
+    buildMcuScreen();
+    showScreen("s-mcu");
+  },1500);
+}
+
+document.getElementById("queryInput").addEventListener("keydown",e=>{if(e.key==="Enter")startQuery();});
+
+function buildMcuScreen(){
+  // Smart hint
+  const smart=getSmartSuggestions(state.query);
+  const hintBox=document.getElementById("smart-hint-box");
+  if(smart){
+    document.getElementById("smart-hint-body").innerHTML=
+      "Best matches: "+smart.slice(0,4).map(s=>`<span class="smart-hint-item">• ${s}</span>`).join("");
+    hintBox.style.display="block";
+  } else {hintBox.style.display="none";}
+
+  // MCU grid
+  const grid=document.getElementById("mcu-grid");
+  grid.innerHTML="";
+  MCUS_DATA.forEach(m=>{
+    const d=document.createElement("div");
+    d.className="mcard";
+    d.innerHTML=`<div style="font-size:20px;margin-bottom:8px;color:${m.esp?"#a855f7":"#00f5ff"}">${m.esp?"◈":"⬡"}</div>
+      <div style="font-size:12px;color:#cbd5e1;font-weight:600;margin-bottom:4px">${m.label}</div>
+      <div style="font-size:10px;color:#334155">${m.sub}</div>`;
+    d.onclick=()=>{
+      document.querySelectorAll(".mcard").forEach(c=>c.classList.remove("sel"));
+      d.classList.add("sel");
+      state.mcu=m;
+      setTimeout(()=>{ buildComponentsScreen(); showScreen("s-components"); },200);
+    };
+    grid.appendChild(d);
+  });
+
+  // Detected bar
+  document.getElementById("detected-bar-text").textContent=state.sensors.slice(0,4).join(" · ");
+}
+
+function buildComponentsScreen(){
+  const wrap=document.getElementById("comp-chips");
+  wrap.innerHTML="";
+  state.sensors.forEach(s=>{
+    const b=document.createElement("button");
+    b.className="chip"+(state.comps.includes(s)?" sel":"");
+    b.textContent=(state.comps.includes(s)?"✓ ":"")+s;
+    b.onclick=()=>{
+      if(state.comps.includes(s)){
+        state.comps=state.comps.filter(x=>x!==s);
+        b.classList.remove("sel");b.textContent=s;
+      } else {
+        state.comps.push(s);
+        b.classList.add("sel");b.textContent="✓ "+s;
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+function goToConfirm(){
+  const sel=state.comps.length?state.comps:[state.sensors[0]].filter(Boolean);
+  const name=generateProjectName(state.query,sel);
+  state.projName=name;
+
+  // Cost
+  const board=state.mcu?.label||"Arduino Uno";
+  const items=[board,...sel,"Breadboard","Jumper Wires"];
+  state.costs=items.map(n=>({name:n,price:PRICES[n]||2}));
+
+  // Conflicts
+  state.conflicts=detectPinConflicts(sel,state.mcu);
+
+  // Populate confirm screen
+  document.getElementById("conf-proj-name").textContent=name;
+  document.getElementById("conf-query").textContent=state.query;
+  document.getElementById("conf-board").textContent=state.mcu?.label||"—";
+  document.getElementById("conf-comps").textContent=sel.join(", ");
+
+  // Conflicts
+  const cs=document.getElementById("conflict-section");
+  const cl=document.getElementById("conflict-list");
+  if(state.conflicts.length>0){
+    cs.style.display="block";
+    cl.innerHTML=state.conflicts.map(c=>`
+      <div class="conflict-box">
+        <div style="color:#fca5a5;font-size:12px;margin-bottom:4px">Pin ${c.pin}: <strong>${c.comp1}</strong> conflicts with <strong>${c.comp2}</strong> (${c.label})</div>
+        ${c.suggestedAlt?`<div style="color:#10b981;font-size:11px">✓ Fix: reassign ${c.comp2} to Pin ${c.suggestedAlt}</div>`:""}
+      </div>`).join("");
+  } else {cs.style.display="none";}
+
+  // Cost
+  let total=0;
+  document.getElementById("cost-list").innerHTML=state.costs.map(i=>{
+    total+=i.price;
+    return `<div class="cost-row"><span style="color:#94a3b8">${i.name}</span><span style="color:#f59e0b">≈ $${i.price.toFixed(2)}</span></div>`;
+  }).join("");
+  document.getElementById("cost-total").textContent=`≈ $${total.toFixed(2)}`;
+
+  showScreen("s-confirm");
+}
+
+function compile(){
+  showScreen("s-generating");
+  const steps=["Parsing sensor protocol","Resolving GPIO map","Running conflict check","Generating firmware","Applying optimizations"];
+  const el=document.getElementById("gen-steps");
+  el.innerHTML=steps.map((t,i)=>`<div class="gen-step" id="gstep${i}" style="color:#334155"><span>▶</span> ${t}</div>`).join("");
+
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>0){const prev=document.getElementById("gstep"+(i-1));if(prev)prev.innerHTML=`<span class="neon-g">✓</span> ${steps[i-1]}`; }
+    const cur=document.getElementById("gstep"+i);
+    if(cur){cur.style.color="#00f5ff";cur.innerHTML=`<span class="neon">▶</span> ${steps[i]}<span id="gd"></span>`;}
+    i++;
+    if(i>=steps.length){clearInterval(iv);setTimeout(showResult,600);}
+  },450);
+
+  // Dot spinner
+  let d=0;
+  const dv=setInterval(()=>{
+    d=(d+1)%4;const ge=document.getElementById("gd");if(ge)ge.textContent=".".repeat(d);
+  },300);
+  setTimeout(()=>clearInterval(dv),steps.length*450+800);
+}
+
+async function showResult(){ 
+
+  const sel=state.comps.length?state.comps:[state.sensors[0]].filter(Boolean);
+  const mcuId=state.mcu?.id||"arduino_uno";
+  const gen=await generateCode(state.query,mcuId,sel);
+
+  gen.wiring = gen.wiring || [];
+  gen.code = gen.code || "// No code generated";
+  gen.explanation = gen.explanation || "";
+  gen.library = gen.library || "";
+  gen.difficulty = gen.difficulty || "";
+  gen.buildTime = gen.buildTime || "";
+  
+  state.result=gen;
+
+  // Header
+  document.getElementById("res-proj-name").textContent=state.projName;
+  document.getElementById("term-filename").textContent=state.projName.replace(/\s+/g,"_")+".ino";
+
+  // Badges
+  const bw=document.getElementById("res-badges");
+  let conflBdg=state.conflicts.length>0?`<span class="bdg bdg-r">⚠ ${state.conflicts.length} Pin Conflict${state.conflicts.length>1?"s":""}</span>`:"";
+  bw.innerHTML=`<span class="bdg bdg-g">${gen.difficulty||"Beginner"}</span>
+    <span class="bdg bdg-y">⏱ ${gen.buildTime||"10 min"}</span>
+    <span class="bdg bdg-b">${state.mcu?.label||""}</span>${conflBdg}`;
+
+  // Code
+  document.getElementById("code-output").innerHTML=highlight(gen.code);
+
+  // Explanation
+  document.getElementById("explanation-output").textContent=gen.explanation;
+
+  // Wiring
+  document.getElementById("wiring-board").textContent=state.mcu?.label||"board";
+  document.getElementById("wiring-board").style.color=state.mcu?.id?.includes("esp")?"#a855f7":"#00f5ff";
+  document.getElementById("wiring-list").innerHTML=gen.wiring.map(w=>`
+    <div class="wrow">
+      <div class="wdot" style="background:${w.color};box-shadow:0 0 6px ${w.color}"></div>
+      <span style="color:#a855f7;min-width:240px;font-size:12px;font-weight:600">${w.from}</span>
+      <span style="color:#1e293b;font-size:11px">──→</span>
+      <span style="color:#00f5ff;font-size:12px">${w.to}</span>
+    </div>`).join("");
+
+  const wc=document.getElementById("wiring-conflicts");
+  const wcl=document.getElementById("wiring-conflict-list");
+  if(state.conflicts.length>0){
+    wc.style.display="block";
+    wcl.innerHTML=state.conflicts.map(c=>`
+      <div class="conflict-box">
+        <span style="color:#fca5a5;font-size:12px">Pin ${c.pin}: ${c.comp1} ↔ ${c.comp2} (${c.label})</span>
+        ${c.suggestedAlt?`<span style="color:#10b981;font-size:11px;display:block;margin-top:4px">→ Move ${c.comp2} to Pin ${c.suggestedAlt}</span>`:""}
+      </div>`).join("");
+  } else {wc.style.display="none";}
+
+  // Libraries
+  const libs=sel.map(c=>LIBRARIES[c]).filter(Boolean);
+  const lw=document.getElementById("libs-list");
+  if(libs.length>0){
+    lw.innerHTML=libs.map(lib=>`
+      <div class="libcard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="color:#00f5ff;font-size:13px;font-weight:700">${lib.name}</span>
+          ${lib.search?'<span class="bdg bdg-b">Install Required</span>':'<span class="bdg bdg-g">Built-in</span>'}
+        </div>
+        <div style="color:#475569;font-size:11px;margin-bottom:${lib.search?10:0}px">by ${lib.author}</div>
+        ${lib.search?`<div class="lib-install">Arduino IDE → <span style="color:#e2e8f0">Tools → Manage Libraries</span> → Search "<span style="color:#00f5ff">${lib.search}</span>"</div>`:""}
+      </div>`).join("");
+  } else {
+    lw.innerHTML=`<div class="libcard"><div style="color:#10b981;font-size:13px;margin-bottom:6px">✓ No external libraries required</div><div style="color:#475569;font-size:12px">Uses only built-in Arduino functions. Upload and run immediately.</div></div>`;
+  }
+
+  // Cost tab
+  let total2=0;
+  document.getElementById("res-cost-list").innerHTML=state.costs.map(i=>{
+    total2+=i.price;
+    return `<div class="cost-row"><span style="color:#94a3b8;font-size:12px">${i.name}</span><span style="color:#f59e0b;font-size:12px">≈ $${i.price.toFixed(2)}</span></div>`;
+  }).join("");
+  document.getElementById("res-cost-total").textContent=`≈ $${total2.toFixed(2)}`;
+
+  // Default tab
+  switchTab("code",document.querySelector(".tabbt"));
+  showScreen("s-result");
+}
+
+function switchTab(name,btn){
+  document.querySelectorAll(".tabbt").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  ["code","wiring","libs","cost"].forEach(t=>{
+    document.getElementById("tab-"+t).style.display=t===name?"block":"none";
+  });
+}
+
+function copyCode(){
+  if(!state.result)return;
+  navigator.clipboard.writeText(state.result.code).then(()=>{
+    const btn=document.getElementById("copy-btn");
+    btn.textContent="✓ COPIED";
+    setTimeout(()=>btn.textContent="COPY",2000);
+  });
+}
+
+function downloadCode(){
+  if(!state.result)return;
+  const blob=new Blob([state.result.code],{type:"text/plain"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=state.projName.replace(/\s+/g,"_")+".ino";
+  a.click();
+}
+
+function reset(){
+  state={query:"",mcu:null,sensors:[],comps:[],result:null,conflicts:[],costs:[],projName:"",dotsInterval:null};
+  document.getElementById("queryInput").value="";
+  showScreen("s-idle");
+  document.getElementById("queryInput").focus();
+}
+</script>
+</body>
+</html>
